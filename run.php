@@ -17,9 +17,11 @@ class gene {
   public $HP=100;
   public $AT=100;
   public $DF=100;
-  public $SA=100;
-  public $SD=100;
-  public $AG=100;
+  public $AG=100; //はやさ
+#  public $SA=100;
+#  public $SD=100;
+  public $WP=50;//技の威力
+  public $WH=50;//技の命中率
 
 
   public function NextGen(){
@@ -33,35 +35,35 @@ class gene {
 
   //変異させる
   private function evolv(){
+    
     //どこかのパラメータを足したり引いたりする
     foreach([-1,+1] as $v){
       $k=mt_rand(1,6);
-  //    echo $k;
       switch($k){
         case 1:$this->HP += $v;break;
         case 2:$this->AT += $v;break;
         case 3:$this->DF += $v;break;
-        case 4:$this->SA += $v;break;
-        case 5:$this->SD += $v;break;
+        case 4:$this->WP += $v;break;
+        case 5:$this->WH += $v;break;
         case 6:$this->AG += $v;break;
       }      
     }    
   }
   public function __toString(){
     return sprintf(
-      "( %03d / %03d / %05.2f％ )  HP: %03d AT:%03d DF:%03d SA:%03d SD:%03d AG:%03d"
-      ." W[] \n",
+      "( %03d / %03d / %05.2f％ )  HP: %03d AT:%03d DF:%03d AG:%03d [WP:%03d WH:%03d] \n",
       $this->win,
       $this->lose,
       $this->win/($this->win + $this->lose)*100,
       $this->HP,
       $this->AT,
       $this->DF,
-      $this->SA,
-      $this->SD,
-      $this->AG
+      $this->AG,
+      $this->WP,
+      $this->WH
     );
   }
+
 }
 
 
@@ -76,25 +78,40 @@ function fight($a,$b){
   
   $aHP=$a->HP;
   $bHP=$b->HP;
+  $attack=function($a,$b){
+    //技
+    $skill_power=$a->WP;
+    
+    //攻撃防御計算
+    $d=($skill_power * $a->AT / $b->DF) / 50 + 2;
+
+    //補正
+    $d= $d * mt_rand(0xD9,0xFF) / 0xFF;
+
+    //命中判定
+    if($a->WH < mt_rand(1,99)){
+      //ミス
+      return 0;
+    }
+
+    return ($d<1)?1:floor($d);
+  };
+
+
+
   while(0<$aHP && 0<$bHP ){
     //Aの攻撃
-    
-    $max_damage=0<($a->AT-$b->DF)?($a->AT-$b->DF):1;
-    $bHP -= abs(mt_rand(1,$max_damage)) + 1;
+    $bHP -= $attack($a,$b);
 
-    
     //Bの攻撃
-    $max_damage=0<($b->AT-$a->DF)?($b->AT-$a->DF):1;
-    $aHP -= abs(mt_rand(1, $max_damage)) + 1;
+    $aHP -= $attack($b,$a);
   }
   
   if($aHP <= $bHP){
-      echo 1;
       $a->lose+=1;
       $b->win+=1;
   }
   else{
-      echo 2;
       $a->win++;
       $b->lose++;     
   }
@@ -109,10 +126,12 @@ for($i=0;$i<$generation_count;$i++){
   usort($source,$fight);//戦わせる
   //下位半分を切り捨て
   $source=array_slice($source,0,count($source)>>1);//半分
-  echo "<$i 世代 の生き残り>";
+  /*
+  echo "\n<$i 世代 の生き残り>\n";
   foreach($source as $rank=>$o){
     echo "<{$rank}> $o";
   }
+  */
 
   $next_gen=[];
   foreach($source as $o){
@@ -126,8 +145,8 @@ for($i=0;$i<$generation_count;$i++){
 }
 
 
-#foreach($source as $rank=>$o){
-#  echo "<{$rank}> $o";
-#}
+foreach($source as $rank=>$o){
+  echo "<{$rank}> $o";
+}
 
 
