@@ -43,8 +43,14 @@ class gene {
         case 1:$this->HP += $v;break;
         case 2:$this->AT += $v;break;
         case 3:$this->DF += $v;break;
-        case 4:$this->WP += $v;break;
-        case 5:$this->WH += $v;break;
+        case 4:
+          $this->WP += $v*10;
+          $this->WH -= $v*10;
+        break;
+        case 5:
+          $this->WH += $v*10;
+          $this->WP -= $v*10;
+        break;
         case 6:$this->AG += $v;break;
       }      
     }    
@@ -98,13 +104,14 @@ function fight($a,$b){
   };
 
 
-
-  while(0<$aHP && 0<$bHP ){
-    //Aの攻撃
-    $bHP -= $attack($a,$b);
-
-    //Bの攻撃
-    $aHP -= $attack($b,$a);
+  $turn=$b->AG < $a->AG?0:1;
+  while(0< $aHP && 0< $bHP ){
+    if($turn%2==0){
+      $bHP -= $attack($a,$b);
+    }else{
+      $aHP -= $attack($b,$a);
+    }
+    $turn++;
   }
   
   if($aHP <= $bHP){
@@ -145,6 +152,7 @@ for($i=0;$i<$generation_count;$i++){
 }
 
 
+//結果出力
 foreach($source as $rank=>$o){
   echo "<{$rank}> $o";
 }
